@@ -734,10 +734,7 @@ class SwinDecoder(nn.Module):
     def forward(self, x):
         """Forward function."""
 
-        # for i in range(len(e_o)):
-        #    layer = self.layers[i]
-        #    x_out, H, W, x, Wh, Ww = layer(x, Wh, Ww)
-        # return x
+
 
         identity = x
         B, C, H, W = x.shape
@@ -759,8 +756,6 @@ class Swin_Decoder(nn.Module):
     def __init__(self, in_channels, depths, num_heads):
         super(Swin_Decoder, self).__init__()
         self.up = SwinDecoder(in_channels, depths=depths, num_heads=num_heads)
-        # self.up1 = nn.Upsample(scale_factor=2)
-        # self.up2 = nn.Conv2d(in_channels, in_channels//2, kernel_size=3, stride=1, padding=1, bias=True)
         self.conv_relu = nn.Sequential(
             nn.Conv2d(in_channels // 2, in_channels // 2, kernel_size=3, padding=1),
             nn.ReLU(inplace=True)
@@ -772,8 +767,6 @@ class Swin_Decoder(nn.Module):
 
     def forward(self, x1, x2):
         x1 = self.up(x1)
-        # x1 = self.up2(x1)
-        # x2 = self.att_block(x1, x2)
         x2 = self.conv2(x2)
         x1 = torch.cat((x2, x1), dim=1)
         out = self.conv_relu(x1)
@@ -865,11 +858,10 @@ class UNet(nn.Module):
 if __name__ == '__main__':
     print('#### Test Case ###')
     from torch.autograd import Variable
-    x = Variable(torch.rand(1, 4, 64,64)).cuda()
-    y = Variable(torch.rand(1, 1, 256, 256)).cuda()
+    x = Variable(torch.rand(1, 4, 32,32)).cuda()
+    y = Variable(torch.rand(1, 1, 128, 128)).cuda()
     model = UNet().cuda()
     print("Input shape:", x.shape)
     out = model(x,y)
-
     print('Output shape:', out.size())
 
