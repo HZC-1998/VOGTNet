@@ -162,7 +162,7 @@ criterion =nn.MSELoss().cuda()
 #优化器设置
 lr=0.001
 WD=1e-4
-optimizer = torch.optim.Adam([{'params': model.parameters(), 'initial_lr': lr}], lr=lr, weight_decay=WD)
+optimizer = torch.optim.SGD(model.parameters(), lr=lr, momentum=0.9, weight_decay=WD)
 #SGD属于深度学习的优化方法，类似的优化方法还可以有Adam，momentum等等
 if (torch.cuda.device_count() > 1):
     print("Let's use", torch.cuda.device_count(), "GPUs!")

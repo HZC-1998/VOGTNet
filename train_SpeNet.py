@@ -258,10 +258,7 @@ class STNet(nn.Module):
 
 lr=0.0001
 weight_decay=1e-4
-xls_path = 'spectral_response.xls'
-sp_matrix=learnable_SRF.get_spectral_response(xls_path)
-sp_range=learnable_SRF.get_sp_range(sp_matrix)
-down_spe=learnable_SRF.convolution_hr2msi(4,1,sp_range).cuda()
+down_spe=learnable_SRF.SpeNet(4,1).cuda()
 criterion =nn.MSELoss().cuda()#定义损失函数
 optimizer_down_spe= torch.optim.Adam(down_spe.parameters(),lr=lr,weight_decay=weight_decay)
 

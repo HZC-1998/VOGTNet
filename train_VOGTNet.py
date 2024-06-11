@@ -147,19 +147,15 @@ class DataPrefetcher():
 #shuffle=是否打乱训练样本的排列顺序
 
 
-KS = 32
+KS = 4
 factor = 4
-kernel = torch.rand(1, 1, KS, KS)
+kernel = torch.rand(4, 4, KS, KS)
 kernel[0, 0, :, :] = torch.from_numpy(learinable_PSF.get_kernel(factor, 'gauss', 0, KS, sigma=3))
 Conv = nn.Conv2d(1, 1, KS, factor)
 Conv.weight = nn.Parameter(kernel)
-dow = nn.Sequential(nn.ReplicationPad2d(int((KS - factor) / 2.)), Conv)
-down_spa = learinable_PSF.Apply(dow, 1).cuda()
-xls_path = 'spectral_response.xls'
-sp_matrix=learnable_SRF.get_spectral_response(xls_path)
-
-sp_range=learnable_SRF.get_sp_range(sp_matrix)
-down_spe=learnable_SRF.convolution_hr2msi(4,1,sp_range).cuda()
+dow =Conv
+dow=dow.cuda()
+down_spe=learnable_SRF.SpeNet(4,1).cuda()
 
 checkpoint_model1=''#weight_path of DBFN
 checkpoint_model2=''#weight_path of SpeNet
@@ -185,7 +181,7 @@ WD=1e-4
 optimizer = torch.optim.Adam([{'params': model1.parameters(), 'initial_lr': lr}], lr=lr, weight_decay=WD)
 lr_da=1e-4
 WD_Dspa=1e-5
-optimizer_down_spa= torch.optim.Adam(down_spa.parameters(), lr=lr_da, weight_decay=WD_Dspa)
+optimizer_down_spa= torch.optim.Adam(dow.parameters(), lr=lr_da, weight_decay=WD_Dspa)
 
 #SGD属于深度学习的优化方法，类似的优化方法还可以有Adam，momentum等等
 if (torch.cuda.device_count() > 1):
@@ -220,7 +216,7 @@ def train(model, trainset_dataloader, start_epoch):
             out1= model1(output)  # output of the ARM
             with torch.no_grad():
                 out3 = down_spe(out1)# output of spectral constraint
-            out4=down_spa(img_lr_u,out3)# output of spatial constraint
+            out4=dow(img_lr_u,out3)# output of spatial constraint
 
             train_loss =criterion(out4,img_lr_u)+u*criterion(out3,img_pan)
 
@@ -235,7 +231,7 @@ def train(model, trainset_dataloader, start_epoch):
         # Save the model checkpoints and backup
         state = {'model': model1.state_dict(), 'optimizer': optimizer.state_dict(), 'epoch': epoch}
         torch.save(state, checkpoint_model)#保存模型参数，优化器参数
-        state1 = {'down_spa': down_spa.state_dict(), 'optimizer_down_spa': optimizer_down_spa.state_dict(), 'epoch': epoch}
+        state1 = {'down_spa': dow.state_dict(), 'optimizer_down_spa': optimizer_down_spa.state_dict(), 'epoch': epoch}
         torch.save(state1, checkpoint_model)  # 保存模型参数，优化器参数
        # state_dict变量存放训练过程中需要学习的权重和偏执系数，state_dict作为python的字典对象将每一层的参数映射成tensor张量，需要注意的是torch.nn.Module模块中的state_dict只包含卷积层和全连接层的参数，当网络中存在batchnorm时，例如vgg网络结构，torch.nn.Module模块中的state_dict也会存放batchnorm's running_mean。
 
