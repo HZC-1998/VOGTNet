@@ -22,7 +22,7 @@ def get_kernel(factor=4, kernel_type='gauss', phase=0, kernel_width=32, support=
     kernel /= kernel.sum()
     return kernel
 
-
+"""
 KS = 4
 factor = 4
 kernel = torch.rand(4, 4, KS, KS)
@@ -30,9 +30,8 @@ kernel[0, 0, :, :] = torch.from_numpy(get_kernel(factor, 'gauss', 0, KS, sigma=3
 Conv = nn.Conv2d(4, 4, KS, factor)
 Conv.weight = nn.Parameter(kernel)
 dow =Conv
-#down_spa = Apply(dow, 1)
 inf_img=torch.torch.rand(8,4,32,32)
 output=dow(inf_img)
 print(output.shape)
-
+"""
 
